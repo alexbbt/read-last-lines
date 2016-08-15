@@ -1,7 +1,7 @@
 {
   "name": "read-last-lines",
-  "version": "1.0.1",
-  "description": "Read in the last 'n' lines of a file",
+  "version": "1.0.2",
+  "description": "Read in the last N lines of a file efficiently using node.js and fs.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -17,7 +17,7 @@
     "file",
     "read"
   ],
-  "author": "Alexander Bell-Towne <code@bell-towne.com>",
+  "author": "Alexander Bell-Towne <code@bell-towne.com> (https://github.com/alexbbt)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/alexbbt/read-last-lines/issues"
