@@ -1,0 +1,29 @@
+{
+  "name": "read-last-lines",
+  "version": "1.0.1",
+  "description": "Read in the last 'n' lines of a file",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexbbt/read-last-lines.git"
+  },
+  "keywords": [
+    "read",
+    "lines",
+    "last",
+    "file",
+    "read"
+  ],
+  "author": "Alexander Bell-Towne <code@bell-towne.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alexbbt/read-last-lines/issues"
+  },
+  "homepage": "https://github.com/alexbbt/read-last-lines#readme",
+  "dependencies": {
+    "fs": "0.0.2"
+  }
+}
