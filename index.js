@@ -56,16 +56,17 @@ module.exports = {
 							}
 
 							if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
-								resolve(lines);
+								if (lines.substring(0, 1) === "\n") {
+									lines = lines.substring(1);
+								}
+								return resolve(lines);
 							}
 
 							readPreviousChar(self.stat, self.file, chars)
 								.then((nextCharacter) => {
 									lines = nextCharacter + lines;
-									if (nextCharacter === '\n') {
+									if (nextCharacter === '\n' && lines.length > 1) {
 										lineCount++;
-									} else if (lines.length === 1) {
-										lineCount++; // account for missing new line at end of file.
 									}
 									chars++;
 								})
