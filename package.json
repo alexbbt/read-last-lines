@@ -24,6 +24,5 @@
   },
   "homepage": "https://github.com/alexbbt/read-last-lines#readme",
   "dependencies": {
-    "fs": "0.0.2"
   }
 }
