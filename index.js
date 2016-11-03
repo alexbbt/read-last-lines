@@ -1,11 +1,9 @@
 const fsp = require('fs-promise');
 
 const readPreviousChar = function(stat, file, currentCharacterCount) {
-	var buffer =  new Buffer(10);
-	return fsp.read(file, buffer, 0, 10, stat.size - 1 - currentCharacterCount)
+	return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
 		.then((bytesReadAndBuffer) => {
-			console.log(bytesReadAndBuffer, buffer);
-			return String.fromCharCode(bytesReadAndBuffer[1]);
+			return String.fromCharCode(bytesReadAndBuffer[1][0]);
 		})
 }
 
@@ -58,15 +56,11 @@ module.exports = {
 							}
 
 							if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
-								// console.log(lines);
 								resolve(lines);
 							}
 
-							var nextCharacter;
 							readPreviousChar(self.stat, self.file, chars)
-								.then(char => nextCharacter = char)
-								.then(() => {
-								// .then((nextCharacter) => {
+								.then((nextCharacter) => {
 									lines = nextCharacter + lines;
 									if (nextCharacter === '\n') {
 										lineCount++;
