@@ -4,7 +4,7 @@
   "description": "Read in the last N lines of a file efficiently using node.js and fs.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "make test"
   },
   "repository": {
     "type": "git",
@@ -23,7 +23,13 @@
     "url": "https://github.com/alexbbt/read-last-lines/issues"
   },
   "homepage": "https://github.com/alexbbt/read-last-lines#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.0.2",
+    "mock-fs": "^3.11.0"
+  },
   "dependencies": {
-    "fs": "0.0.2"
+    "fs-promise": "^0.5.0",
+    "mocks": "0.0.15"
   }
 }
