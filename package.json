@@ -25,7 +25,8 @@
   "homepage": "https://github.com/alexbbt/read-last-lines#readme",
   "devDependencies": {
     "chai-as-promised": "^6.0.0",
-    "chai": "^3.5.0"
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2"
   },
   "dependencies": {
     "fs-promise": "^0.5.0"
