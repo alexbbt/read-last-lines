@@ -1,6 +1,6 @@
 {
   "name": "read-last-lines",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "description": "Read in the last N lines of a file efficiently using node.js and fs.",
   "main": "index.js",
   "scripts": {
@@ -24,12 +24,10 @@
   },
   "homepage": "https://github.com/alexbbt/read-last-lines#readme",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^3.0.2",
-    "mock-fs": "^3.11.0"
+    "chai-as-promised": "^6.0.0",
+    "chai": "^3.5.0"
   },
   "dependencies": {
-    "fs-promise": "^0.5.0",
-    "mocks": "0.0.15"
+    "fs-promise": "^0.5.0"
   }
 }
