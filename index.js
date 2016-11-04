@@ -1,5 +1,7 @@
 const fsp = require('fs-promise');
 
+const newLineCharacters = ["\n", "\r"]
+
 const readPreviousChar = function(stat, file, currentCharacterCount) {
 	return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
 		.then((bytesReadAndBuffer) => {
@@ -26,7 +28,7 @@ module.exports = {
 			fsp.exists(input_file_path)
 			.then(function(exists) {
 				if (!exists) {
-					throw new Exception("file does not exist");
+					throw "file does not exist";
 				}
 
 			}).then(function() {
@@ -56,7 +58,7 @@ module.exports = {
 							}
 
 							if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
-								if (lines.substring(0, 1) === "\n") {
+								if (newLineCharacters.includes(lines.substring(0, 1))) {
 									lines = lines.substring(1);
 								}
 								return resolve(lines);
@@ -65,7 +67,7 @@ module.exports = {
 							readPreviousChar(self.stat, self.file, chars)
 								.then((nextCharacter) => {
 									lines = nextCharacter + lines;
-									if (nextCharacter === '\n' && lines.length > 1) {
+									if (newLineCharacters.includes(nextCharacter) && lines.length > 1) {
 										lineCount++;
 									}
 									chars++;
@@ -74,9 +76,8 @@ module.exports = {
 						}
 						do_while_loop();
 
-					})
-					.catch(reject);
-			});
+					});
+			}).catch(reject);
 		})
 	}
 }
