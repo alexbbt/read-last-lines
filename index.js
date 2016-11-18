@@ -13,9 +13,9 @@ module.exports = {
 
 	/**
 	 * Read in the last `n` lines of a file
-	 * @param	{string}	 file				 direct or relative path to file.
-	 * @param	{int}	 		maxLineCount max number of lines to read in.
-	 * @return {promise}							 new Promise, resolved with lines or rejected with error.
+	 * @param  {string}  file (direct or relative path to file.)
+	 * @param  {int}     maxLineCount max number of lines to read in.
+	 * @return {promise} new Promise, resolved with lines or rejected with error.
 	 */
 
 	read: function(input_file_path, maxLineCount) {
