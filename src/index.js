@@ -29,7 +29,7 @@ module.exports = {
 			fsp.exists(input_file_path)
 			.then(function(exists) {
 				if (!exists) {
-					throw "file does not exist";
+					throw new Error("file does not exist");
 				}
 
 			}).then(function() {
