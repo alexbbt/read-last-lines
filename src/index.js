@@ -1,14 +1,14 @@
-'use strict';
-const fsp = require('fs-promise');
+"use strict";
+const fsp = require("fs-promise");
 
-const newLineCharacters = ["\n", "\r"]
+const newLineCharacters = ["\n", "\r"];
 
 const readPreviousChar = function(stat, file, currentCharacterCount) {
 	return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
 		.then((bytesReadAndBuffer) => {
 			return String.fromCharCode(bytesReadAndBuffer[1][0]);
-		})
-}
+		});
+};
 
 module.exports = {
 
@@ -24,16 +24,16 @@ module.exports = {
 			let self = {
 				stat: null,
 				file: null
-			}
+			};
 
 			fsp.exists(input_file_path)
 			.then(function(exists) {
 				if (!exists) {
-					throw "file does not exist";
+					throw new Error("file does not exist");
 				}
 
 			}).then(function() {
-				var promises = [];
+				let promises = [];
 
 				// Load file Stats.
 				promises.push(
@@ -42,18 +42,18 @@ module.exports = {
 
 				// Open file for reading.
 				promises.push(
-					fsp.open(input_file_path, 'r')
+					fsp.open(input_file_path, "r")
 						.then(file => self.file = file));
 
 				return promises;
 			}).then(function(promises) {
 				Promise.all(promises)
 					.then(() => {
-						var chars = 0;
-						var lineCount = 0;
-						var lines = '';
+						let chars = 0;
+						let lineCount = 0;
+						let lines = "";
 
-						var do_while_loop = function() {
+						let do_while_loop = function() {
 							if (lines.length > self.stat.size) {
 								lines = lines.substring(lines.length - self.stat.size);
 							}
@@ -74,11 +74,11 @@ module.exports = {
 									chars++;
 								})
 								.then(do_while_loop);
-						}
+						};
 						do_while_loop();
 
 					});
 			}).catch(reject);
-		})
+		});
 	}
-}
+};
