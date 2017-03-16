@@ -1,11 +1,11 @@
 {
   "name": "read-last-lines",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Read in the last N lines of a file efficiently using node.js and fs.",
   "main": "./dist/index.js",
   "scripts": {
     "build": "babel src --presets babel-preset-es2015 --out-dir dist",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "test": "make test"
   },
   "repository": {
