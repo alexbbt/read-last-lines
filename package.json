@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "babel src --presets babel-preset-es2015 --out-dir dist",
-    "prepublishOnly": "npm run build",
+    "prepare": "npm run build",
     "test": "make test"
   },
   "repository": {
