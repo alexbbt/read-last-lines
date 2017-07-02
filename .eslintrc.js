@@ -23,6 +23,20 @@ module.exports = {
         "semi": [
             "error",
             "always"
-        ]
+        ],
+        "space-before-function-paren": [
+            "error", {
+                "anonymous": "never",
+                "named": "never",
+                "asyncArrow": "never"
+            },
+        ],
+        "arrow-spacing": [
+            "error", {
+                "before": true,
+                "after": true
+            },
+        ],
+        "comma-dangle": ["error", "always-multiline"],
     }
 };

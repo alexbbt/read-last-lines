@@ -3,7 +3,7 @@ const fsp = require("fs-promise");
 
 const newLineCharacters = ["\n", "\r"];
 
-const readPreviousChar = function(stat, file, currentCharacterCount) {
+const readPreviousChar = function( stat, file, currentCharacterCount) {
 	return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
 		.then((bytesReadAndBuffer) => {
 			return String.fromCharCode(bytesReadAndBuffer[1][0]);
@@ -23,7 +23,7 @@ module.exports = {
 		return new Promise((resolve, reject) => {
 			let self = {
 				stat: null,
-				file: null
+				file: null,
 			};
 
 			fsp.exists(input_file_path)
@@ -80,5 +80,5 @@ module.exports = {
 					});
 			}).catch(reject);
 		});
-	}
+	},
 };
