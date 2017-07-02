@@ -62,6 +62,7 @@ module.exports = {
 								if (newLineCharacters.includes(lines.substring(0, 1))) {
 									lines = lines.substring(1);
 								}
+								fsp.close(self.file);
 								return resolve(lines);
 							}
 
@@ -78,7 +79,12 @@ module.exports = {
 						do_while_loop();
 
 					});
-			}).catch(reject);
+			}).catch(function(reason) {
+				if (self.file !== null) {
+					fsp.close(self.file);
+				}
+				return reject(reason);
+			});
 		});
 	},
 };
