@@ -27,12 +27,12 @@ module.exports = {
 			};
 
 			fsp.exists(input_file_path)
-			.then(function(exists) {
+			.then((exists) => {
 				if (!exists) {
 					throw new Error("file does not exist");
 				}
 
-			}).then(function() {
+			}).then(() => {
 				let promises = [];
 
 				// Load file Stats.
@@ -46,8 +46,8 @@ module.exports = {
 						.then(file => self.file = file));
 
 				return promises;
-			}).then(function(promises) {
-				Promise.all(promises)
+			}).then((promises) => {
+				return Promise.all(promises)
 					.then(() => {
 						let chars = 0;
 						let lineCount = 0;
@@ -79,7 +79,7 @@ module.exports = {
 						do_while_loop();
 
 					});
-			}).catch(function(reason) {
+			}).catch((reason) => {
 				if (self.file !== null) {
 					fsp.close(self.file);
 				}
