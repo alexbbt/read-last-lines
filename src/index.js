@@ -1,7 +1,7 @@
 "use strict";
 const fsp = require("fs-promise");
 
-const newLineCharacters = ["\n", "\r"];
+const NEW_LINE_CHARACTERS = ["\n", "\r"];
 
 const readPreviousChar = function( stat, file, currentCharacterCount) {
 	return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
@@ -59,7 +59,7 @@ module.exports = {
 							}
 
 							if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
-								if (newLineCharacters.includes(lines.substring(0, 1))) {
+								if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1))) {
 									lines = lines.substring(1);
 								}
 								fsp.close(self.file);
@@ -69,7 +69,7 @@ module.exports = {
 							readPreviousChar(self.stat, self.file, chars)
 								.then((nextCharacter) => {
 									lines = nextCharacter + lines;
-									if (newLineCharacters.includes(nextCharacter) && lines.length > 1) {
+									if (NEW_LINE_CHARACTERS.includes(nextCharacter) && lines.length > 1) {
 										lineCount++;
 									}
 									chars++;
