@@ -3,13 +3,6 @@ const fsp = require("fs-promise");
 
 const NEW_LINE_CHARACTERS = ["\n", "\r"];
 
-const readPreviousChar = function( stat, file, currentCharacterCount) {
-	return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
-		.then((bytesReadAndBuffer) => {
-			return String.fromCharCode(bytesReadAndBuffer[1][0]);
-		});
-};
-
 module.exports = {
 
 	/**
@@ -20,6 +13,13 @@ module.exports = {
 	 */
 
 	read: function(input_file_path, maxLineCount) {
+		const readPreviousChar = function( stat, file, currentCharacterCount) {
+			return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
+				.then((bytesReadAndBuffer) => {
+					return String.fromCharCode(bytesReadAndBuffer[1][0]);
+				});
+		};
+
 		return new Promise((resolve, reject) => {
 			let self = {
 				stat: null,
@@ -53,7 +53,7 @@ module.exports = {
 						let lineCount = 0;
 						let lines = "";
 
-						let do_while_loop = function() {
+						const do_while_loop = function() {
 							if (lines.length > self.stat.size) {
 								lines = lines.substring(lines.length - self.stat.size);
 							}
