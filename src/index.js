@@ -46,8 +46,6 @@ module.exports = {
 					fsp.open(input_file_path, "r")
 						.then(file => self.file = file));
 
-				return promises;
-			}).then((promises) => {
 				return Promise.all(promises);
 			}).then(() => {
 				let chars = 0;
