@@ -7,12 +7,13 @@ module.exports = {
 
 	/**
 	 * Read in the last `n` lines of a file
-	 * @param  {string}  file (direct or relative path to file.)
-	 * @param  {int}     maxLineCount max number of lines to read in.
-	 * @return {promise} new Promise, resolved with lines or rejected with error.
+	 * @param  {string}   file (direct or relative path to file.)
+	 * @param  {int}      maxLineCount max number of lines to read in.
+	 * @param  {encoding} specifies the character encoding to be used, or 'buffer'. defaults to 'utf8'.
+	 * @return {promise}  new Promise, resolved with lines or rejected with error.
 	 */
 
-	read: function(input_file_path, maxLineCount) {
+	read: function(input_file_path, maxLineCount, encoding) {
 		const readPreviousChar = function( stat, file, currentCharacterCount) {
 			return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
 				.then((bytesReadAndBuffer) => {
@@ -63,7 +64,10 @@ module.exports = {
 									lines = lines.substring(1);
 								}
 								fsp.close(self.file);
-								return resolve(lines);
+								if (encoding === 'buffer') {
+									return resolve(Buffer.from(lines, 'binary'));
+								}
+								return resolve(Buffer.from(lines, 'binary').toString(encoding || 'utf8'));
 							}
 
 							readPreviousChar(self.stat, self.file, chars)
