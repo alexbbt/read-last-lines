@@ -58,7 +58,7 @@ describe("#equals", function() {
 	});
 
 	it("should return a buffer, when asked for", function() {
-		return rll.read("test/utf8", 2, 'buffer')
+		return rll.read("test/utf8", 2, "buffer")
 			.then((lines) => {
 				expect(lines).to.be.an.instanceOf(Buffer);
 				expect(lines).to.have.lengthOf(163);
@@ -66,9 +66,9 @@ describe("#equals", function() {
 	});
 
 	it("should return binary encoding, when asked for", function() {
-		return rll.read("test/utf8", 2, 'binary')
+		return rll.read("test/utf8", 2, "binary")
 			.then((lines) => {
-				expect(lines).to.be.a('string');
+				expect(lines).to.be.a("string");
 				expect(lines).to.have.string("\xe4\xb8\xad");
 			});
 	});
@@ -76,7 +76,7 @@ describe("#equals", function() {
 	it("should correctly read UTF-8 files", function() {
 		return rll.read("test/utf8", 2)
 			.then((lines) => {
-				expect(lines).to.be.a('string');
+				expect(lines).to.be.a("string");
 				expect(lines).to.have.string("中文");
 				expect(lines).to.have.string("español");
 				expect(lines).to.have.string("português");
