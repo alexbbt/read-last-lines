@@ -1,8 +1,6 @@
 "use strict";
 const fsp = require("fs-promise");
 
-const NEW_LINE_CHARACTERS = ["\n", "\r"];
-
 module.exports = {
 
 	/**
@@ -14,6 +12,9 @@ module.exports = {
 	 */
 
 	read: function(input_file_path, maxLineCount, encoding) {
+
+		const NEW_LINE_CHARACTERS = ["\n", "\r"];
+
 		const readPreviousChar = function( stat, file, currentCharacterCount) {
 			return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
 				.then((bytesReadAndBuffer) => {
@@ -46,43 +47,40 @@ module.exports = {
 					fsp.open(input_file_path, "r")
 						.then(file => self.file = file));
 
-				return promises;
-			}).then((promises) => {
-				return Promise.all(promises)
-					.then(() => {
-						let chars = 0;
-						let lineCount = 0;
-						let lines = "";
+				return Promise.all(promises);
+			}).then(() => {
+				let chars = 0;
+				let lineCount = 0;
+				let lines = "";
 
-						const do_while_loop = function() {
-							if (lines.length > self.stat.size) {
-								lines = lines.substring(lines.length - self.stat.size);
+				const do_while_loop = function() {
+					if (lines.length > self.stat.size) {
+						lines = lines.substring(lines.length - self.stat.size);
+					}
+
+					if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
+						if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1))) {
+							lines = lines.substring(1);
+						}
+						fsp.close(self.file);
+                                                if (encoding === 'buffer') {
+                                                        return resolve(Buffer.from(lines, 'binary'));
+                                                }
+                                                return resolve(Buffer.from(lines, 'binary').toString(encoding || 'utf8'));
+					}
+
+					return readPreviousChar(self.stat, self.file, chars)
+						.then((nextCharacter) => {
+							lines = nextCharacter + lines;
+							if (NEW_LINE_CHARACTERS.includes(nextCharacter) && lines.length > 1) {
+								lineCount++;
 							}
+							chars++;
+						})
+						.then(do_while_loop);
+				};
+				return do_while_loop();
 
-							if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
-								if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1))) {
-									lines = lines.substring(1);
-								}
-								fsp.close(self.file);
-								if (encoding === 'buffer') {
-									return resolve(Buffer.from(lines, 'binary'));
-								}
-								return resolve(Buffer.from(lines, 'binary').toString(encoding || 'utf8'));
-							}
-
-							readPreviousChar(self.stat, self.file, chars)
-								.then((nextCharacter) => {
-									lines = nextCharacter + lines;
-									if (NEW_LINE_CHARACTERS.includes(nextCharacter) && lines.length > 1) {
-										lineCount++;
-									}
-									chars++;
-								})
-								.then(do_while_loop);
-						};
-						do_while_loop();
-
-					});
 			}).catch((reason) => {
 				if (self.file !== null) {
 					fsp.close(self.file);

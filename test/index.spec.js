@@ -84,18 +84,3 @@ describe("#equals", function() {
 			});
 	});
 });
-
-let print_results = function(title, data) {
-	console.log(JSON.stringify({
-		title: title,
-		encoded_data: JSON.stringify(data),
-		data: data,
-		lines: data.split(/\n|\r/).length,
-		split: data.split(/\n|\r/),
-		trim: data.trim(),
-		length: data.length,
-		trimmed_length: data.trim().length
-	}, null, 2));
-};
-// let test = this.test;
-// print_results(test.title, lines);
