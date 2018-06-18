@@ -1,5 +1,5 @@
 "use strict";
-const fsp = require("fs-promise");
+const fs = require("mz/fs");
 
 module.exports = {
 
@@ -21,7 +21,7 @@ module.exports = {
 		}
 
 		const readPreviousChar = function( stat, file, currentCharacterCount) {
-			return fsp.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
+			return fs.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
 				.then((bytesReadAndBuffer) => {
 					return String.fromCharCode(bytesReadAndBuffer[1][0]);
 				});
@@ -33,7 +33,7 @@ module.exports = {
 				file: null,
 			};
 
-			fsp.exists(input_file_path)
+			fs.exists(input_file_path)
 			.then((exists) => {
 				if (!exists) {
 					throw new Error("file does not exist");
@@ -44,12 +44,12 @@ module.exports = {
 
 				// Load file Stats.
 				promises.push(
-					fsp.stat(input_file_path)
+					fs.stat(input_file_path)
 						.then(stat => self.stat = stat));
 
 				// Open file for reading.
 				promises.push(
-					fsp.open(input_file_path, "r")
+					fs.open(input_file_path, "r")
 						.then(file => self.file = file));
 
 				return Promise.all(promises);
@@ -67,7 +67,7 @@ module.exports = {
 						if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1))) {
 							lines = lines.substring(1);
 						}
-						fsp.close(self.file);
+						fs.close(self.file);
 						if (encoding === "buffer") {
 							return resolve(Buffer.from(lines, "binary"));
 						}
@@ -88,7 +88,7 @@ module.exports = {
 
 			}).catch((reason) => {
 				if (self.file !== null) {
-					fsp.close(self.file);
+					fs.close(self.file);
 				}
 				return reject(reason);
 			});
