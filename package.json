@@ -5,7 +5,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "BABEL_ENV=production babel src --out-dir dist",
-    "prepublish": "npm run build",
+    "prepublishOnly": "npm run build",
     "test": "make test"
   },
   "repository": {
@@ -35,6 +35,6 @@
     "mocha": "^3.1.2"
   },
   "dependencies": {
-    "fs-promise": "^0.5.0"
+    "mz": "^2.7.0"
   }
 }
