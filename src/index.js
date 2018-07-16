@@ -21,7 +21,7 @@ module.exports = {
 		}
 
 		const readPreviousChar = function( stat, file, currentCharacterCount) {
-			return fs.read(file, new Buffer(1), 0, 1, stat.size - 1 - currentCharacterCount)
+			return fs.read(file, Buffer.alloc(1), 0, 1, stat.size - 1 - currentCharacterCount)
 				.then((bytesReadAndBuffer) => {
 					return String.fromCharCode(bytesReadAndBuffer[1][0]);
 				});
