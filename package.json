@@ -2,7 +2,7 @@
   "name": "read-last-lines",
   "version": "1.6.0",
   "description": "Read in the last N lines of a file efficiently using node.js and fs.",
-  "main": "./dist/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "babel src --out-dir dist",
     "build": "BABEL_ENV=production babel src --out-dir dist",
