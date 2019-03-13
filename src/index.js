@@ -1,17 +1,14 @@
-"use strict";
 const fs = require("mz/fs");
 
 module.exports = {
-
 	/**
 	 * Read in the last `n` lines of a file
 	 * @param  {string}   input_file_path - file (direct or relative path to file.)
 	 * @param  {int}      maxLineCount    - max number of lines to read in.
 	 * @param  {encoding} encoding        - specifies the character encoding to be used, or 'buffer'. defaults to 'utf8'.
 	 *
-	 * @return {promise}  a promis resolved with the lines or rejected with an error.
+	 * @return {promise}  a promise resolved with the lines or rejected with an error.
 	 */
-
 	read: function(input_file_path, maxLineCount, encoding) {
 
 		const NEW_LINE_CHARACTERS = ["\n", "\r"];

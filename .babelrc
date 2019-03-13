@@ -1,8 +1,15 @@
 {
-  "presets": ["es2015"],
+  "presets": [
+    [
+      "@babel/env",
+      {
+        "targets": "> 0.25%, not dead"
+      }
+    ]
+  ],
   "env": {
     "production": {
-      "presets": ["babili"]
+      "presets": ["minify"]
     }
   }
 }
