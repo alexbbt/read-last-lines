@@ -85,7 +85,10 @@ module.exports = {
 
 				}).catch((reason) => {
 					if (self.file !== null) {
-						fs.close(self.file);
+						fs.close(self.file).catch((error) => {
+							// We might get here if the encoding is invalid.
+							// Since we are already rejecting, let's ignore this error.
+						});
 					}
 					return reject(reason);
 				});
