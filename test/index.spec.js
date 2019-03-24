@@ -83,4 +83,8 @@ describe("#read", function() {
 				expect(lines).to.have.string("日本語");
 			});
 	});
+
+	it("should error if the encoding is invalid", function() {
+		return assert.isRejected(rll.read("test/numbered", 2, "bad-encoding"), "Unknown encoding: bad-encoding");
+	});
 });
