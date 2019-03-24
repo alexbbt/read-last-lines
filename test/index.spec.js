@@ -10,7 +10,7 @@ const expect = chai.expect;
 const assert = chai.assert;
 
 
-describe("#equals", function() {
+describe("#read", function() {
 	it("return all lines when asked for more than the file has", function() {
 		return rll.read("test/numbered", 15)
 			.then((lines) => {
