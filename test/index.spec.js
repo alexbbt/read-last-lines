@@ -10,7 +10,7 @@ const expect = chai.expect;
 const assert = chai.assert;
 
 
-describe("#equals", function() {
+describe("#read", function() {
 	it("return all lines when asked for more than the file has", function() {
 		return rll.read("test/numbered", 15)
 			.then((lines) => {
@@ -82,5 +82,9 @@ describe("#equals", function() {
 				expect(lines).to.have.string("português");
 				expect(lines).to.have.string("日本語");
 			});
+	});
+
+	it("should error if the encoding is invalid", function() {
+		return assert.isRejected(rll.read("test/numbered", 2, "bad-encoding"), "Unknown encoding: bad-encoding");
 	});
 });
