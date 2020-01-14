@@ -11,7 +11,7 @@ module.exports = {
 	 */
 	read: function(input_file_path, maxLineCount, encoding) {
 
-		const NEW_LINE_CHARACTERS = ["\n", "\r"];
+		const NEW_LINE_CHARACTERS = ["\n"];
 
 		if (encoding == null) {
 			encoding = "utf8";
@@ -85,7 +85,7 @@ module.exports = {
 
 				}).catch((reason) => {
 					if (self.file !== null) {
-						fs.close(self.file).catch((error) => {
+						fs.close(self.file).catch(() => {
 							// We might get here if the encoding is invalid.
 							// Since we are already rejecting, let's ignore this error.
 						});
