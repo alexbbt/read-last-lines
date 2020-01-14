@@ -1,6 +1,9 @@
 /* eslint-disable */
 
 const rll = require("../src/index.js");
+
+const fs = require("fs");
+
 const chai = require("chai");
 const chaiAsPromised = require("chai-as-promised");
 
@@ -58,10 +61,14 @@ describe("#read", function() {
 	});
 
 	it("should return a buffer, when asked for", function() {
+		// Read the whole file because the length changes on windows git.
+		// see: https://github.com/alexbbt/read-last-lines/issues/22#issuecomment-573868249
+		const wholeFileAsBuffer = fs.readFileSync("test/utf8");
+
 		return rll.read("test/utf8", 2, "buffer")
 			.then((lines) => {
 				expect(lines).to.be.an.instanceOf(Buffer);
-				expect(lines).to.have.lengthOf(163);
+				expect(lines).to.have.lengthOf(wholeFileAsBuffer.length);
 			});
 	});
 
