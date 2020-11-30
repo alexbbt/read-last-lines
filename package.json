@@ -6,9 +6,12 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "babel src --out-dir dist",
-    "build": "BABEL_ENV=production babel src --out-dir dist && npm run copy:types",
+    "build": "npm run build:js && npm run copy:types",
+    "build:js": "BABEL_ENV=production babel src --out-dir dist",
     "prepublishOnly": "npm run build",
-    "test": "mocha --reporter spec",
+    "test": "npm run test:js && npm run test:types",
+    "test:js": "mocha --reporter spec",
+    "test:types": "npm run copy:types && tsd",
     "linting": "eslint src",
     "copy:types": "cp src/index.d.ts dist/"
   },
