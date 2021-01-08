@@ -13,13 +13,14 @@
     "test:js": "mocha --reporter spec",
     "test:types": "npm run copy:types && tsd",
     "linting": "eslint src",
-    "copy:types": "cp src/index.d.ts dist/"
+    "copy:types": "mkdir -p dist && cp src/index.d.ts dist/"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alexbbt/read-last-lines.git"
   },
   "files": [
+    "dist/index.js",
     "dist/index.d.ts"
   ],
   "tsd": {

@@ -1,9 +1,9 @@
-import {expectType, expectError} from 'tsd';
+import { expectType } from "tsd";
 
 import readLastLines = require("../src");
 
-expectType<Promise<any>>(readLastLines.read('foo', 50));
-expectType<any>(await readLastLines.read('bar', 50));
+expectType<Promise<string>>(readLastLines.read("foo.txt", 50));
+expectType<Promise<string>>(readLastLines.read("foo.txt", 50, "utf8"));
+expectType<Promise<string>>(readLastLines.read("foo.txt", 50, "hex"));
 
-expectError(await readLastLines.read('foo', 50));
-expectError(await readLastLines.read(0, 50, 30));
+expectType<Promise<Buffer>>(readLastLines.read("foo.txt", 50, "buffer"));
