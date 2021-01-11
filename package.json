@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/alexbbt/read-last-lines#readme",
   "devDependencies": {
-    "@babel/cli": "^7.7.0",
+    "@babel/cli": "^7.12.10",
     "@babel/core": "^7.3.4",
     "@babel/preset-env": "^7.3.4",
     "@types/node": "^14.14.9",
@@ -48,7 +48,7 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "eslint": "^5.15.1",
-    "mocha": "^6.2.2",
+    "mocha": "^8.2.1",
     "tsd": "^0.13.1"
   },
   "dependencies": {
