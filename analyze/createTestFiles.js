@@ -16,7 +16,10 @@ async function makeTestFile(path, numLines)
 	progressBar.start(numLines, 0);
 
 	for (let index = 0; index < numLines; index++) {
-		progressBar.update(index + 1);
+		if (index % 1000 === 0) {
+			progressBar.update(index);
+		}
+
 		let data = index > 0 ? "\n" : "";
 		data += `${index+1} Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua`;
 
@@ -26,6 +29,7 @@ async function makeTestFile(path, numLines)
 		}
 	}
 
+	progressBar.update(numLines);
 	progressBar.stop();
 	file.end();
 	console.log();

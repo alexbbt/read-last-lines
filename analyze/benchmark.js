@@ -26,6 +26,9 @@ async function runTest(fileName, fileLength, linesToRead) {
 		add("SplitSlice", async function() {
 			return new Promise((resolve) => {
 				fs.readFile(fileName, "utf8", (error, file) => {
+					if(error) {
+						throw error;
+					}
 					resolve(file.split("\n").slice(0 - linesToRead).join("\n"));
 				});
 			});
