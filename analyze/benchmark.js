@@ -11,6 +11,7 @@ const linesToReads = [
 	100,
 	500,
 	1000,
+	20 * 1000,
 ];
 
 async function runTest(fileName, fileLength, linesToRead) {
