@@ -21,8 +21,10 @@ readLastLines.read('path/to/file', 50)
 
 ## Contributing
 
+> More details can be found in [CONTRIBUTING.md](CONTRIBUTING.md)
+
 1. Fork it on Github [https://github.com/alexbbt/read-last-lines](https://github.com/alexbbt/read-last-lines)
 2. Create your feature branch: `git checkout -b my-new-feature`
 3. Commit your changes: `git commit -am 'Add some feature'`
 4. Push to the branch: `git push origin my-new-feature`
-5. Submit a pull request against the development branch :D
+5. Submit a pull request.
