@@ -3,16 +3,28 @@
   "version": "1.7.2",
   "description": "Read in the last N lines of a file efficiently using node.js and fs.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "dev": "babel src --out-dir dist",
-    "build": "BABEL_ENV=production babel src --out-dir dist",
+    "build": "npm run build:js && npm run copy:types",
+    "build:js": "BABEL_ENV=production babel src --out-dir dist",
     "prepublishOnly": "npm run build",
-    "test": "mocha --reporter spec",
-    "linting": "eslint src"
+    "test": "npm run test:js && npm run test:types",
+    "test:js": "mocha --reporter spec",
+    "test:types": "npm run copy:types && tsd",
+    "linting": "eslint src",
+    "copy:types": "mkdir -p dist && cp src/index.d.ts dist/"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alexbbt/read-last-lines.git"
+  },
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts"
+  ],
+  "tsd": {
+    "directory": "test"
   },
   "keywords": [
     "read",
@@ -31,11 +43,13 @@
     "@babel/cli": "^7.7.0",
     "@babel/core": "^7.3.4",
     "@babel/preset-env": "^7.3.4",
+    "@types/node": "^14.14.9",
     "babel-preset-minify": "^0.5.0",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "eslint": "^5.15.1",
-    "mocha": "^6.2.2"
+    "mocha": "^6.2.2",
+    "tsd": "^0.13.1"
   },
   "dependencies": {
     "mz": "^2.7.0"
