@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["node"],
+    "lib": ["ES5"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noEmit": true,
