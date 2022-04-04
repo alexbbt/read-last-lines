@@ -56,7 +56,5 @@
     "mocha": "^8.2.1",
     "tsd": "^0.13.1"
   },
-  "dependencies": {
-    "mz": "^2.7.0"
-  }
+  "dependencies": {}
 }
