@@ -58,5 +58,8 @@
   },
   "dependencies": {
     "mz": "^2.7.0"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }

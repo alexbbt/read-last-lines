@@ -1,66 +1,242 @@
 /* eslint-disable no-console */
-const { suite, add, cycle, complete, save } = require("benny");
 const fs = require("fs");
+const fsp = require("fs/promises");
+const path = require("path");
+const { spawnSync } = require("child_process");
+
 const rll = require("../src/index.js");
 const fileLengths = require("./fileLengths.js");
+const { legacyBytewise } = require("./strategies/legacy-bytewise.js");
+const { chunkedReverse } = require("./strategies/chunked.js");
 
-const files = Object.entries(fileLengths);
-
-const linesToReads = [
-	50,
-	100,
-	500,
-	1000,
-	20 * 1000,
+const QUICK_LINES = [50, 100, 500];
+const FULL_LINES = [50, 100, 500, 1000, 20 * 1000];
+const SMALL_FIXTURES = [
+	{ path: "test/numbered", label: "fixture-numbered", sizeType: "tiny" },
+	{ path: "test/windows_new_lines", label: "fixture-windows-new-lines", sizeType: "tiny" },
+	{ path: "test/utf8", label: "fixture-utf8", sizeType: "tiny" },
 ];
 
-async function runTest(fileName, fileLength, linesToRead) {
-	const resultsFileName = `${linesToRead}-${fileLength}`;
+function readProfile() {
+	const profile = process.env.RLL_BENCHMARK_PROFILE || "quick";
+	if (profile !== "quick" && profile !== "full") {
+		throw new Error(`Unsupported RLL_BENCHMARK_PROFILE value: ${profile}`);
+	}
+	return profile;
+}
 
-	await suite(
-		`Reading ${linesToRead} lines from file with ${fileLength} lines`,
+function selectGeneratedFiles(profile) {
+	const entries = Object.entries(fileLengths).map(([filePath, lineCount]) => {
+		const sizeType = lineCount < 10_000 ? "tiny" : (lineCount < 1_000_000 ? "medium" : "huge");
+		return { path: filePath, label: path.basename(filePath), lineCount, sizeType };
+	});
 
-		add("RLL", async function() {
-			return rll.read(fileName, linesToRead);
-		}),
+	if (profile === "quick") {
+		return entries.slice(0, 2);
+	}
 
-		add("SplitSlice", async function() {
-			return new Promise((resolve) => {
-				fs.readFile(fileName, "utf8", (error, file) => {
-					if(error) {
-						throw error;
-					}
-					resolve(file.split("\n").slice(0 - linesToRead).join("\n"));
-				});
-			});
-		}),
+	return entries;
+}
 
-		cycle(),
-		complete(),
+async function splitSlice(filePath, maxLineCount, encoding = "utf8") {
+	if (!Number.isFinite(maxLineCount)) {
+		throw new TypeError("maxLineCount must be a finite number");
+	}
+	if (!Number.isInteger(maxLineCount)) {
+		throw new TypeError("maxLineCount must be an integer");
+	}
+	if (maxLineCount <= 0) {
+		return encoding === "buffer" ? Buffer.alloc(0) : "";
+	}
 
-		save({ file: resultsFileName}),
-	);
+	const file = await fsp.readFile(filePath);
+	const text = file.toString("utf8");
+	const normalized = text.endsWith("\n") ? text.slice(0, -1) : text;
+	const lines = normalized.length === 0 ? [] : normalized.split("\n");
+	const selected = lines.slice(0 - maxLineCount).join("\n");
+	const buffer = Buffer.from(selected, "utf8");
 
-	console.log("");
+	if (encoding === "buffer") {
+		return buffer;
+	}
+	return buffer.toString(encoding);
+}
 
-	return JSON.parse(fs.readFileSync(`./benchmark/results/${resultsFileName}.json`));
+async function runTail(filePath, maxLineCount) {
+	const result = spawnSync("tail", ["-n", String(maxLineCount), filePath], {
+		encoding: "utf8",
+		maxBuffer: 1024 * 1024 * 64,
+	});
+	if (result.error) {
+		throw result.error;
+	}
+	if (result.status !== 0) {
+		throw new Error(result.stderr || `tail exited with ${result.status}`);
+	}
+	return result.stdout;
+}
+
+function supportsTail() {
+	const check = spawnSync("tail", ["--version"], { encoding: "utf8" });
+	// BSD tail exits non-zero for --version, but command exists.
+	return !check.error;
+}
+
+async function measureStrategy(strategyName, fn, scenario, iterations) {
+	const times = [];
+	const memoryDeltas = [];
+	let sample;
+
+	for (let i = 0; i < iterations; i++) {
+		if (global.gc) {
+			global.gc();
+		}
+
+		const rssBefore = process.memoryUsage().rss;
+		const start = process.hrtime.bigint();
+		sample = await fn(scenario.path, scenario.linesToRead, "utf8");
+		const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
+		const rssAfter = process.memoryUsage().rss;
+
+		times.push(elapsedMs);
+		memoryDeltas.push(rssAfter - rssBefore);
+	}
+
+	const avgMs = times.reduce((sum, v) => sum + v, 0) / times.length;
+	const minMs = Math.min(...times);
+	const maxMs = Math.max(...times);
+	const avgRssDeltaBytes = Math.round(memoryDeltas.reduce((sum, v) => sum + v, 0) / memoryDeltas.length);
+
+	return {
+		name: strategyName,
+		avgMs,
+		minMs,
+		maxMs,
+		avgRssDeltaBytes,
+		sampleLength: typeof sample === "string" ? sample.length : sample.byteLength,
+	};
+}
+
+async function runScenario(scenario, strategies, iterations) {
+	const results = [];
+	for (const strategy of strategies) {
+		const result = await measureStrategy(strategy.name, strategy.run, scenario, iterations);
+		results.push(result);
+	}
+
+	results.sort((a, b) => a.avgMs - b.avgMs);
+	return {
+		scenario,
+		results,
+		fastest: results[0].name,
+		slowest: results[results.length - 1].name,
+	};
+}
+
+function formatMarkdown(report) {
+	const lines = [];
+	lines.push("# Benchmark Report");
+	lines.push("");
+	lines.push(`- Profile: \`${report.profile}\``);
+	lines.push(`- Iterations per strategy: \`${report.iterations}\``);
+	lines.push(`- Generated at: \`${report.generatedAt}\``);
+	lines.push("");
+	lines.push("## Scenario Results");
+	lines.push("");
+
+	for (const entry of report.scenarios) {
+		const scenario = entry.scenario;
+		lines.push(`### ${scenario.label} (${scenario.linesToRead} lines)`);
+		lines.push("");
+		lines.push("| Strategy | Avg ms | Min ms | Max ms | Avg RSS delta (bytes) |");
+		lines.push("| --- | ---: | ---: | ---: | ---: |");
+		for (const result of entry.results) {
+			lines.push(`| ${result.name} | ${result.avgMs.toFixed(3)} | ${result.minMs.toFixed(3)} | ${result.maxMs.toFixed(3)} | ${result.avgRssDeltaBytes} |`);
+		}
+		lines.push("");
+	}
+
+	return `${lines.join("\n")}\n`;
 }
 
 async function main() {
-	const table = {};
+	const profile = readProfile();
+	const iterations = Number(process.env.RLL_BENCHMARK_ITERATIONS || (profile === "quick" ? 3 : 5));
+	const linesToRead = profile === "quick" ? QUICK_LINES : FULL_LINES;
+	const generatedFiles = selectGeneratedFiles(profile);
 
-	for (const [fileName, fileLength] of files) {
-		const row = {};
-		for (const linesToRead of linesToReads) {
-			const results = await runTest(fileName, fileLength, linesToRead);
-			const winner = results.results.find((test) => test.name === results.slowest.name);
-			row[linesToRead] = `${results.fastest.name} (${winner.percentSlower}%)`;
+	const scenarios = [];
+	for (const fileEntry of generatedFiles) {
+		for (const lines of linesToRead) {
+			scenarios.push({
+				path: fileEntry.path,
+				label: `${fileEntry.label}-${fileEntry.lineCount || fileEntry.sizeType}`,
+				linesToRead: lines,
+				sizeType: fileEntry.sizeType,
+			});
 		}
-		table[fileLength] = row;
 	}
 
-	console.log("File size X rows read");
-	console.table(table);
+	for (const fixture of SMALL_FIXTURES) {
+		for (const lines of [1, 3, 10]) {
+			scenarios.push({
+				path: fixture.path,
+				label: fixture.label,
+				linesToRead: lines,
+				sizeType: fixture.sizeType,
+			});
+		}
+	}
+
+	const strategies = [
+		{ name: "CurrentRLL", run: rll.read },
+		{ name: "LegacyBytewise", run: legacyBytewise },
+		{ name: "ChunkedReverse", run: chunkedReverse },
+		{ name: "SplitSlice", run: splitSlice },
+	];
+
+	if (supportsTail()) {
+		strategies.push({
+			name: "Tail",
+			run: async (filePath, maxLineCount) => runTail(filePath, maxLineCount),
+		});
+	}
+
+	const scenarioResults = [];
+	for (const scenario of scenarios) {
+		console.log(`Running benchmark for ${scenario.path} (${scenario.linesToRead} lines)`);
+		const result = await runScenario(scenario, strategies, iterations);
+		scenarioResults.push(result);
+	}
+
+	const report = {
+		profile,
+		iterations,
+		generatedAt: new Date().toISOString(),
+		strategies: strategies.map((s) => s.name),
+		scenarios: scenarioResults,
+	};
+
+	const resultsDir = path.join("benchmark", "results");
+	await fsp.mkdir(resultsDir, { recursive: true });
+
+	const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+	const jsonFile = path.join(resultsDir, `report-${stamp}.json`);
+	const latestJson = path.join(resultsDir, "latest.json");
+	const markdownFile = path.join(resultsDir, `report-${stamp}.md`);
+	const latestMarkdown = path.join(resultsDir, "latest.md");
+
+	await fsp.writeFile(jsonFile, JSON.stringify(report, null, 2), "utf8");
+	await fsp.writeFile(latestJson, JSON.stringify(report, null, 2), "utf8");
+	const markdown = formatMarkdown(report);
+	await fsp.writeFile(markdownFile, markdown, "utf8");
+	await fsp.writeFile(latestMarkdown, markdown, "utf8");
+
+	console.log(`Saved benchmark report to ${jsonFile}`);
+	console.log(`Saved benchmark summary to ${markdownFile}`);
 }
 
-main();
+main().catch((error) => {
+	console.error(error);
+	process.exitCode = 1;
+});
