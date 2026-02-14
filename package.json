@@ -54,7 +54,7 @@
     "cli-progress": "^3.8.2",
     "eslint": "^5.15.1",
     "mocha": "^8.2.1",
-    "tsd": "^0.13.1"
+    "tsd": "^0.33.0"
   },
   "dependencies": {
     "mz": "^2.7.0"
