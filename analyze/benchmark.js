@@ -1,5 +1,4 @@
 /* eslint-disable no-console */
-const fs = require("fs");
 const fsp = require("fs/promises");
 const path = require("path");
 const { spawnSync } = require("child_process");
@@ -11,7 +10,7 @@ const { chunkedReverse } = require("./strategies/chunked.js");
 
 const QUICK_LINES = [50, 100, 500];
 const FULL_LINES = [50, 100, 500, 1000, 20 * 1000];
-const DEFAULT_CASE_TIMEOUT_MS = 60_000;
+const DEFAULT_CASE_TIMEOUT_MS = 60000;
 const SMALL_FIXTURES = [
 	{ path: "test/numbered", label: "fixture-numbered", sizeType: "tiny" },
 	{ path: "test/windows_new_lines", label: "fixture-windows-new-lines", sizeType: "tiny" },
@@ -28,7 +27,7 @@ function readProfile() {
 
 function selectGeneratedFiles(profile) {
 	const entries = Object.entries(fileLengths).map(([filePath, lineCount]) => {
-		const sizeType = lineCount < 10_000 ? "tiny" : (lineCount < 1_000_000 ? "medium" : "huge");
+		const sizeType = lineCount < 10000 ? "tiny" : (lineCount < 1000000 ? "medium" : "huge");
 		return { path: filePath, label: path.basename(filePath), lineCount, sizeType };
 	});
 
@@ -243,7 +242,7 @@ async function main() {
 	if (supportsTail()) {
 		strategies.push({
 			name: "Tail",
-			run: async (filePath, maxLineCount) => runTail(filePath, maxLineCount),
+			run: async(filePath, maxLineCount) => runTail(filePath, maxLineCount),
 		});
 	}
 

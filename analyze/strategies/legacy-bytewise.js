@@ -31,6 +31,7 @@ async function legacyBytewise(filePath, maxLineCount, encoding = "utf8") {
 		let lineCount = 0;
 		let lines = "";
 
+		// eslint-disable-next-line no-constant-condition
 		while (true) {
 			if (lines.length > stat.size) {
 				lines = lines.substring(lines.length - stat.size);
