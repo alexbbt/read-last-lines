@@ -11,6 +11,7 @@ const { chunkedReverse } = require("./strategies/chunked.js");
 
 const QUICK_LINES = [50, 100, 500];
 const FULL_LINES = [50, 100, 500, 1000, 20 * 1000];
+const DEFAULT_CASE_TIMEOUT_MS = 60_000;
 const SMALL_FIXTURES = [
 	{ path: "test/numbered", label: "fixture-numbered", sizeType: "tiny" },
 	{ path: "test/windows_new_lines", label: "fixture-windows-new-lines", sizeType: "tiny" },
@@ -76,13 +77,26 @@ async function runTail(filePath, maxLineCount) {
 	return result.stdout;
 }
 
+function withTimeout(promise, timeoutMs, label) {
+	let timer;
+	const timeoutPromise = new Promise((_, reject) => {
+		timer = setTimeout(() => {
+			reject(new Error(`Timed out after ${timeoutMs}ms (${label})`));
+		}, timeoutMs);
+	});
+
+	return Promise.race([promise, timeoutPromise]).finally(() => {
+		clearTimeout(timer);
+	});
+}
+
 function supportsTail() {
 	const check = spawnSync("tail", ["--version"], { encoding: "utf8" });
 	// BSD tail exits non-zero for --version, but command exists.
 	return !check.error;
 }
 
-async function measureStrategy(strategyName, fn, scenario, iterations) {
+async function measureStrategy(strategyName, fn, scenario, iterations, caseTimeoutMs) {
 	const times = [];
 	const memoryDeltas = [];
 	let sample;
@@ -94,7 +108,11 @@ async function measureStrategy(strategyName, fn, scenario, iterations) {
 
 		const rssBefore = process.memoryUsage().rss;
 		const start = process.hrtime.bigint();
-		sample = await fn(scenario.path, scenario.linesToRead, "utf8");
+		sample = await withTimeout(
+			fn(scenario.path, scenario.linesToRead, "utf8"),
+			caseTimeoutMs,
+			`${strategyName} on ${scenario.label} (${scenario.linesToRead} lines)`
+		);
 		const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
 		const rssAfter = process.memoryUsage().rss;
 
@@ -117,19 +135,41 @@ async function measureStrategy(strategyName, fn, scenario, iterations) {
 	};
 }
 
-async function runScenario(scenario, strategies, iterations) {
+async function runScenario(scenario, strategies, iterations, caseTimeoutMs) {
 	const results = [];
 	for (const strategy of strategies) {
-		const result = await measureStrategy(strategy.name, strategy.run, scenario, iterations);
-		results.push(result);
+		try {
+			const result = await measureStrategy(strategy.name, strategy.run, scenario, iterations, caseTimeoutMs);
+			results.push(result);
+		} catch (error) {
+			results.push({
+				name: strategy.name,
+				failed: true,
+				error: error.message,
+			});
+			console.warn(`Strategy failed: ${strategy.name} -> ${error.message}`);
+		}
 	}
 
-	results.sort((a, b) => a.avgMs - b.avgMs);
+	results.sort((a, b) => {
+		if (a.failed && b.failed) {
+			return a.name.localeCompare(b.name);
+		}
+		if (a.failed) {
+			return 1;
+		}
+		if (b.failed) {
+			return -1;
+		}
+		return a.avgMs - b.avgMs;
+	});
+
+	const nonFailedResults = results.filter((result) => !result.failed);
 	return {
 		scenario,
 		results,
-		fastest: results[0].name,
-		slowest: results[results.length - 1].name,
+		fastest: nonFailedResults[0] ? nonFailedResults[0].name : null,
+		slowest: nonFailedResults[nonFailedResults.length - 1] ? nonFailedResults[nonFailedResults.length - 1].name : null,
 	};
 }
 
@@ -151,6 +191,10 @@ function formatMarkdown(report) {
 		lines.push("| Strategy | Avg ms | Min ms | Max ms | Avg RSS delta (bytes) |");
 		lines.push("| --- | ---: | ---: | ---: | ---: |");
 		for (const result of entry.results) {
+			if (result.failed) {
+				lines.push(`| ${result.name} | timeout/error | timeout/error | timeout/error | timeout/error |`);
+				continue;
+			}
 			lines.push(`| ${result.name} | ${result.avgMs.toFixed(3)} | ${result.minMs.toFixed(3)} | ${result.maxMs.toFixed(3)} | ${result.avgRssDeltaBytes} |`);
 		}
 		lines.push("");
@@ -162,6 +206,7 @@ function formatMarkdown(report) {
 async function main() {
 	const profile = readProfile();
 	const iterations = Number(process.env.RLL_BENCHMARK_ITERATIONS || (profile === "quick" ? 3 : 5));
+	const caseTimeoutMs = Number(process.env.RLL_BENCHMARK_CASE_TIMEOUT_MS || DEFAULT_CASE_TIMEOUT_MS);
 	const linesToRead = profile === "quick" ? QUICK_LINES : FULL_LINES;
 	const generatedFiles = selectGeneratedFiles(profile);
 
@@ -205,13 +250,14 @@ async function main() {
 	const scenarioResults = [];
 	for (const scenario of scenarios) {
 		console.log(`Running benchmark for ${scenario.path} (${scenario.linesToRead} lines)`);
-		const result = await runScenario(scenario, strategies, iterations);
+		const result = await runScenario(scenario, strategies, iterations, caseTimeoutMs);
 		scenarioResults.push(result);
 	}
 
 	const report = {
 		profile,
 		iterations,
+		caseTimeoutMs,
 		generatedAt: new Date().toISOString(),
 		strategies: strategies.map((s) => s.name),
 		scenarios: scenarioResults,
