@@ -115,8 +115,57 @@ describe("#read", function() {
 
 	it("keeps blank lines and does not exceed requested line count (issue #41)", async function() {
 		const lines = await rll.read("test/issue_41_repro", 3);
+		expect(lines).to.equal("\n\n\n");
 		expect(countLogicalLines(lines)).to.equal(3);
-		expect(lines).to.not.contain("bb");
+	});
+
+	it("returns empty string for an empty file", async function() {
+		const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "rll-empty-"));
+		const tempFile = path.join(tempDir, "empty.txt");
+		await fsp.writeFile(tempFile, "");
+
+		try {
+			expect(await rll.read(tempFile, 5)).to.equal("");
+			const asBuffer = await rll.read(tempFile, 5, "buffer");
+			expect(asBuffer).to.be.an.instanceOf(Buffer);
+			expect(asBuffer).to.have.lengthOf(0);
+		} finally {
+			await fsp.unlink(tempFile);
+			await fsp.rmdir(tempDir);
+		}
+	});
+
+	it("handles a newline-only file without exceeding maxLineCount", async function() {
+		const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "rll-newlines-"));
+		const tempFile = path.join(tempDir, "newlines.txt");
+		await fsp.writeFile(tempFile, "\n\n\n");
+
+		try {
+			const lines = await rll.read(tempFile, 3);
+			expect(lines).to.match(/^\n*$/);
+			expect(countLogicalLines(lines)).to.be.at.most(3);
+			expect(lines).to.equal("\n\n");
+		} finally {
+			await fsp.unlink(tempFile);
+			await fsp.rmdir(tempDir);
+		}
+	});
+
+	it("returns the last lines when the file is larger than one read chunk", async function() {
+		const tempDir = await fsp.mkdtemp(path.join(os.tmpdir(), "rll-large-"));
+		const tempFile = path.join(tempDir, "large.txt");
+		const header = Buffer.alloc(70 * 1024, 0x61);
+		const body = Buffer.from("\nLINE_A\nLINE_B\nLINE_C\n");
+		await fsp.writeFile(tempFile, Buffer.concat([header, body]));
+
+		try {
+			const lines = await rll.read(tempFile, 3);
+			expect(lines).to.equal("LINE_A\nLINE_B\nLINE_C\n");
+			expect(countLogicalLines(lines)).to.equal(3);
+		} finally {
+			await fsp.unlink(tempFile);
+			await fsp.rmdir(tempDir);
+		}
 	});
 
 	it("returns a buffer when requested", async function() {
