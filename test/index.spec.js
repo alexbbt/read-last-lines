@@ -142,9 +142,8 @@ describe("#read", function() {
 
 		try {
 			const lines = await rll.read(tempFile, 3);
-			expect(lines).to.match(/^\n*$/);
-			expect(countLogicalLines(lines)).to.be.at.most(3);
-			expect(lines).to.equal("\n\n");
+			expect(lines).to.equal("\n\n\n");
+			expect(countLogicalLines(lines)).to.equal(3);
 		} finally {
 			await fsp.unlink(tempFile);
 			await fsp.rmdir(tempDir);

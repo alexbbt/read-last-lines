@@ -82,7 +82,12 @@ module.exports = {
 
 						if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
 							if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1))) {
-								lines = lines.substring(1);
+								const trimmed = lines.substring(1);
+								const maxLines = Math.ceil(Number(maxLineCount));
+								// Keep a leading newline when trimming would under-read (e.g. newline-only files).
+								if (logicalLineCount(trimmed) >= maxLines || logicalLineCount(lines) > maxLines) {
+									lines = trimmed;
+								}
 							}
 							// Cap over-reads from multiple trailing newlines (#41).
 							while (logicalLineCount(lines) > Math.ceil(Number(maxLineCount))) {
