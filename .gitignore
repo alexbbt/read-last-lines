@@ -45,3 +45,6 @@ jspm_packages
 
 # analyze files
 benchmark/
+
+# Local working notes (not for publish)
+.local/

@@ -7,12 +7,13 @@ Reading and following these guidelines will help us make the contribution proces
 ## Quicklinks
 
 - [Contributing to Read Last Lines](#contributing-to-read-last-lines)
-  - [Quicklinks](#quicklinks)
-  - [Code of Conduct](#code-of-conduct)
-  - [Getting Started](#getting-started)
-    - [Issues](#issues)
-    - [Pull Requests](#pull-requests)
-  - [Getting Help](#getting-help)
+    - [Quicklinks](#quicklinks)
+    - [Code of Conduct](#code-of-conduct)
+    - [Getting Started](#getting-started)
+        - [Issues](#issues)
+        - [Pull Requests](#pull-requests)
+    - [Releasing](#releasing)
+    - [Getting Help](#getting-help)
 
 ## Code of Conduct
 
@@ -52,6 +53,16 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 5. Following any formatting and testing guidelines specific to this repo
 6. Push changes to your fork
 7. Open a PR in our repository and follow the PR template so that we can efficiently review the changes.
+
+## Releasing
+
+Maintainers only. There is no build step; `main` points at `src/`.
+
+1. On `master`, with a clean tree: `npm test`
+2. Bump and tag: `npm version patch` (or `minor` / `major`)
+3. Publish: `npm publish`
+4. Push: `git push && git push --tags`
+5. Optional: create a GitHub Release from the new tag
 
 ## Getting Help
 
