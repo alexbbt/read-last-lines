@@ -58,17 +58,22 @@ module.exports = {
 						}
 						return resolve("");
 					}
-					// Detect multiple trailing newlines (fixes #41: cap line count when file ends with \n\n...)
+
+					// Files ending in \n\n... count every newline; a single trailing \n does not.
 					return readPreviousChar(self.stat, self.file, 0)
 						.then((lastByte) => {
-							if (!NEW_LINE_CHARACTERS.includes(lastByte)) {
+							const lastIsNewline = NEW_LINE_CHARACTERS.includes(lastByte);
+							if (!lastIsNewline || self.stat.size < 2) {
 								return { lines: lastByte, chars: 1, lineCount: 0, countEveryNewline: false };
 							}
 							return readPreviousChar(self.stat, self.file, 1).then((secondToLastByte) => {
 								const countEveryNewline = NEW_LINE_CHARACTERS.includes(secondToLastByte);
-								const lines = secondToLastByte + lastByte;
-								const lineCount = countEveryNewline ? (NEW_LINE_CHARACTERS.includes(lastByte) ? 2 : 1) : 0;
-								return { lines, chars: 2, lineCount, countEveryNewline };
+								return {
+									lines: secondToLastByte + lastByte,
+									chars: 2,
+									lineCount: countEveryNewline ? 2 : 0,
+									countEveryNewline,
+								};
 							});
 						})
 						.then((initial) => {
@@ -80,8 +85,9 @@ module.exports = {
 								}
 
 								if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
-									// When we have exactly maxLineCount newlines and all leading, do not trim (so countLogicalLines gets maxLineCount segments; fixes #41)
-									const allLeadingNewlines = lineCount === maxLineCount && lines.length === maxLineCount && NEW_LINE_CHARACTERS.includes(lines.substring(0, 1));
+									const allLeadingNewlines = lineCount === maxLineCount
+										&& lines.length === maxLineCount
+										&& NEW_LINE_CHARACTERS.includes(lines.substring(0, 1));
 									if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1)) && !allLeadingNewlines) {
 										lines = lines.substring(1);
 									}
@@ -95,7 +101,6 @@ module.exports = {
 								return readPreviousChar(self.stat, self.file, chars)
 									.then((nextCharacter) => {
 										lines = nextCharacter + lines;
-										// Count newline: always if 2+ trailing newlines (fixes #41); else only when not the single trailing \n
 										if (NEW_LINE_CHARACTERS.includes(nextCharacter) && (countEveryNewline || lines.length > 1)) {
 											lineCount++;
 										}
