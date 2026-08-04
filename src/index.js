@@ -1,4 +1,4 @@
-const fs = require("mz/fs");
+const fs = require("fs/promises");
 
 module.exports = {
 	/**
@@ -17,10 +17,10 @@ module.exports = {
 			encoding = "utf8";
 		}
 
-		const readPreviousChar = function( stat, file, currentCharacterCount) {
-			return fs.read(file, Buffer.alloc(1), 0, 1, stat.size - 1 - currentCharacterCount)
-				.then((bytesReadAndBuffer) => {
-					return String.fromCharCode(bytesReadAndBuffer[1][0]);
+		const readPreviousChar = function(stat, file, currentCharacterCount) {
+			return file.read(Buffer.alloc(1), 0, 1, stat.size - 1 - currentCharacterCount)
+				.then(({ buffer }) => {
+					return String.fromCharCode(buffer[0]);
 				});
 		};
 
@@ -41,13 +41,14 @@ module.exports = {
 				file: null,
 			};
 
-			fs.exists(input_file_path)
-				.then((exists) => {
-					if (!exists) {
+			fs.access(input_file_path)
+				.catch((err) => {
+					if (err && err.code === "ENOENT") {
 						throw new Error("file does not exist");
 					}
-
-				}).then(() => {
+					throw err;
+				})
+				.then(() => {
 					let promises = [];
 
 					// Load file Stats.
@@ -63,7 +64,7 @@ module.exports = {
 					return Promise.all(promises);
 				}).then(() => {
 					if (maxLineCount <= 0) {
-						fs.close(self.file);
+						self.file.close();
 						if (encoding === "buffer") {
 							return resolve(Buffer.alloc(0));
 						}
@@ -92,7 +93,7 @@ module.exports = {
 								}
 								lines = lines.substring(nextNewline + 1);
 							}
-							fs.close(self.file);
+							self.file.close();
 							if (encoding === "buffer") {
 								return resolve(Buffer.from(lines, "binary"));
 							}
@@ -113,7 +114,7 @@ module.exports = {
 
 				}).catch((reason) => {
 					if (self.file !== null) {
-						fs.close(self.file).catch(() => {
+						self.file.close().catch(() => {
 							// We might get here if the encoding is invalid.
 							// Since we are already rejecting, let's ignore this error.
 						});

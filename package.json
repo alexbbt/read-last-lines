@@ -2,28 +2,23 @@
   "name": "read-last-lines",
   "version": "1.8.0",
   "description": "Read in the last N lines of a file efficiently using node.js and fs.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
   "scripts": {
-    "dev": "babel src --out-dir dist",
-    "build": "npm run build:js && npm run copy:types",
-    "build:js": "BABEL_ENV=production babel src --out-dir dist",
-    "prepublishOnly": "npm run build",
     "analyze": "node ./analyze/benchmark.js",
     "analyze:make-files": "node ./analyze/createTestFiles.js",
     "test": "npm run test:js && npm run test:types",
     "test:js": "mocha --reporter spec",
-    "test:types": "npm run copy:types && tsd",
-    "linting": "eslint src",
-    "copy:types": "mkdir -p dist && cp src/index.d.ts dist/"
+    "test:types": "tsd",
+    "linting": "eslint src"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alexbbt/read-last-lines.git"
   },
   "files": [
-    "dist/index.js",
-    "dist/index.d.ts"
+    "src/index.js",
+    "src/index.d.ts"
   ],
   "tsd": {
     "directory": "test"
@@ -42,11 +37,7 @@
   },
   "homepage": "https://github.com/alexbbt/read-last-lines#readme",
   "devDependencies": {
-    "@babel/cli": "^7.12.10",
-    "@babel/core": "^7.3.4",
-    "@babel/preset-env": "^7.3.4",
-    "@types/node": "^14.14.9",
-    "babel-preset-minify": "^0.5.0",
+    "@types/node": "^14.18.63",
     "benchmark": "^2.1.4",
     "benny": "^3.6.15",
     "chai": "^3.5.0",
@@ -56,10 +47,7 @@
     "mocha": "^8.2.1",
     "tsd": "^0.13.1"
   },
-  "dependencies": {
-    "mz": "^2.7.0"
-  },
   "engines": {
-    "node": ">=24"
+    "node": ">=20"
   }
 }
