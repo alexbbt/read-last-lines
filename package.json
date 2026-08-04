@@ -1,6 +1,6 @@
 {
   "name": "read-last-lines",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "description": "Read in the last N lines of a file efficiently using node.js and fs.",
   "main": "src/index.js",
   "types": "src/index.d.ts",
