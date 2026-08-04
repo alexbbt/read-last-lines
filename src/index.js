@@ -24,6 +24,17 @@ module.exports = {
 				});
 		};
 
+		const logicalLineCount = function(data) {
+			if (!data) {
+				return 0;
+			}
+			let normalized = data.replace(/\r\n/g, "\n");
+			if (normalized.endsWith("\n")) {
+				normalized = normalized.slice(0, -1);
+			}
+			return normalized ? normalized.split("\n").length : 0;
+		};
+
 		return new Promise((resolve, reject) => {
 			let self = {
 				stat: null,
@@ -51,6 +62,14 @@ module.exports = {
 
 					return Promise.all(promises);
 				}).then(() => {
+					if (maxLineCount <= 0) {
+						fs.close(self.file);
+						if (encoding === "buffer") {
+							return resolve(Buffer.alloc(0));
+						}
+						return resolve("");
+					}
+
 					let chars = 0;
 					let lineCount = 0;
 					let lines = "";
@@ -63,6 +82,15 @@ module.exports = {
 						if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
 							if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1))) {
 								lines = lines.substring(1);
+							}
+							// Cap over-reads from multiple trailing newlines (#41).
+							while (logicalLineCount(lines) > Math.ceil(Number(maxLineCount))) {
+								const nextNewline = lines.indexOf("\n");
+								if (nextNewline === -1) {
+									lines = "";
+									break;
+								}
+								lines = lines.substring(nextNewline + 1);
 							}
 							fs.close(self.file);
 							if (encoding === "buffer") {
