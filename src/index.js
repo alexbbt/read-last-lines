@@ -24,6 +24,17 @@ module.exports = {
 				});
 		};
 
+		const logicalLineCount = function(data) {
+			if (!data) {
+				return 0;
+			}
+			let normalized = data.replace(/\r\n/g, "\n");
+			if (normalized.endsWith("\n")) {
+				normalized = normalized.slice(0, -1);
+			}
+			return normalized ? normalized.split("\n").length : 0;
+		};
+
 		return new Promise((resolve, reject) => {
 			let self = {
 				stat: null,
@@ -59,57 +70,46 @@ module.exports = {
 						return resolve("");
 					}
 
-					// Files ending in \n\n... count every newline; a single trailing \n does not.
-					return readPreviousChar(self.stat, self.file, 0)
-						.then((lastByte) => {
-							const lastIsNewline = NEW_LINE_CHARACTERS.includes(lastByte);
-							if (!lastIsNewline || self.stat.size < 2) {
-								return { lines: lastByte, chars: 1, lineCount: 0, countEveryNewline: false };
+					let chars = 0;
+					let lineCount = 0;
+					let lines = "";
+
+					const do_while_loop = function() {
+						if (lines.length > self.stat.size) {
+							lines = lines.substring(lines.length - self.stat.size);
+						}
+
+						if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
+							if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1))) {
+								lines = lines.substring(1);
 							}
-							return readPreviousChar(self.stat, self.file, 1).then((secondToLastByte) => {
-								const countEveryNewline = NEW_LINE_CHARACTERS.includes(secondToLastByte);
-								return {
-									lines: secondToLastByte + lastByte,
-									chars: 2,
-									lineCount: countEveryNewline ? 2 : 0,
-									countEveryNewline,
-								};
-							});
-						})
-						.then((initial) => {
-							let { lines, chars, lineCount, countEveryNewline } = initial;
-
-							const do_while_loop = function() {
-								if (lines.length > self.stat.size) {
-									lines = lines.substring(lines.length - self.stat.size);
+							// Cap over-reads from multiple trailing newlines (#41).
+							while (logicalLineCount(lines) > Math.ceil(Number(maxLineCount))) {
+								const nextNewline = lines.indexOf("\n");
+								if (nextNewline === -1) {
+									lines = "";
+									break;
 								}
+								lines = lines.substring(nextNewline + 1);
+							}
+							fs.close(self.file);
+							if (encoding === "buffer") {
+								return resolve(Buffer.from(lines, "binary"));
+							}
+							return resolve(Buffer.from(lines, "binary").toString(encoding));
+						}
 
-								if (lines.length >= self.stat.size || lineCount >= maxLineCount) {
-									const allLeadingNewlines = lineCount === maxLineCount
-										&& lines.length === maxLineCount
-										&& NEW_LINE_CHARACTERS.includes(lines.substring(0, 1));
-									if (NEW_LINE_CHARACTERS.includes(lines.substring(0, 1)) && !allLeadingNewlines) {
-										lines = lines.substring(1);
-									}
-									fs.close(self.file);
-									if (encoding === "buffer") {
-										return resolve(Buffer.from(lines, "binary"));
-									}
-									return resolve(Buffer.from(lines, "binary").toString(encoding));
+						return readPreviousChar(self.stat, self.file, chars)
+							.then((nextCharacter) => {
+								lines = nextCharacter + lines;
+								if (NEW_LINE_CHARACTERS.includes(nextCharacter) && lines.length > 1) {
+									lineCount++;
 								}
-
-								return readPreviousChar(self.stat, self.file, chars)
-									.then((nextCharacter) => {
-										lines = nextCharacter + lines;
-										if (NEW_LINE_CHARACTERS.includes(nextCharacter) && (countEveryNewline || lines.length > 1)) {
-											lineCount++;
-										}
-										chars++;
-									})
-									.then(do_while_loop);
-							};
-							return do_while_loop();
-						});
+								chars++;
+							})
+							.then(do_while_loop);
+					};
+					return do_while_loop();
 
 				}).catch((reason) => {
 					if (self.file !== null) {
