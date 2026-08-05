@@ -2,21 +2,27 @@
 
 [![NPM](https://nodei.co/npm/read-last-lines.png?compact=true)](https://nodei.co/npm/read-last-lines/)
 
-Read in the last N lines of a file efficiently using node.js and fs.
+Read in the last N lines of a file efficiently using node.js and fs. Used by [Signal Desktop](https://github.com/signalapp/Signal-Desktop), [Ghost CLI](https://github.com/TryGhost/Ghost-CLI), and others.
 
 ## Installation
 
-``` bash
-npm install read-last-lines --save
+```bash
+npm install read-last-lines
 ```
 
 ## Usage
 
-example reading last 50 lines of a file
-``` javascript
+```javascript
 const readLastLines = require('read-last-lines');
-readLastLines.read('path/to/file', 50)
-	.then((lines) => console.log(lines));
+
+const lines = await readLastLines.read('path/to/file', 50);
+console.log(lines);
+```
+
+An optional third argument sets the encoding (default `'utf8'`). Pass `'buffer'` to get a `Buffer` instead of a string.
+
+```javascript
+const buffer = await readLastLines.read('path/to/file', 50, 'buffer');
 ```
 
 ## Contributing
