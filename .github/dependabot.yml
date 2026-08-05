@@ -1,0 +1,9 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Runtime package has no production deps today; ignore eslint/mocha/tsd noise.
+    allow:
+      - dependency-type: production
