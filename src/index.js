@@ -2,33 +2,45 @@ const fs = require("fs/promises");
 
 const DEFAULT_CHUNK_SIZE = 64 * 1024;
 
-function logicalLineCount(data) {
-	if (!data) {
+function logicalLineCount(buf) {
+	if (!buf || buf.length === 0) {
 		return 0;
 	}
-	let normalized = data.replace(/\r\n/g, "\n");
-	if (normalized.endsWith("\n")) {
-		normalized = normalized.slice(0, -1);
+
+	let end = buf.length;
+	if (buf[end - 1] === 0x0a) {
+		end -= 1;
 	}
-	return normalized ? normalized.split("\n").length : 0;
+	if (end === 0) {
+		return 0;
+	}
+
+	let newlines = 0;
+	for (let i = 0; i < end; i++) {
+		if (buf[i] === 0x0a) {
+			newlines++;
+		}
+	}
+	return newlines + 1;
 }
 
-function finalizeLines(lines, maxLineCount) {
-	if (lines.startsWith("\n")) {
-		const trimmed = lines.substring(1);
+function finalizeLines(buf, maxLineCount) {
+	if (buf.length > 0 && buf[0] === 0x0a) {
+		const trimmed = buf.subarray(1);
 		const maxLines = Math.ceil(Number(maxLineCount));
-		if (logicalLineCount(trimmed) >= maxLines || logicalLineCount(lines) > maxLines) {
-			lines = trimmed;
+		if (logicalLineCount(trimmed) >= maxLines || logicalLineCount(buf) > maxLines) {
+			buf = trimmed;
 		}
 	}
-	while (logicalLineCount(lines) > Math.ceil(Number(maxLineCount))) {
-		const nextNewline = lines.indexOf("\n");
+
+	while (logicalLineCount(buf) > Math.ceil(Number(maxLineCount))) {
+		const nextNewline = buf.indexOf(0x0a);
 		if (nextNewline === -1) {
-			return "";
+			return Buffer.alloc(0);
 		}
-		lines = lines.substring(nextNewline + 1);
+		buf = buf.subarray(nextNewline + 1);
 	}
-	return lines;
+	return buf;
 }
 
 module.exports = {
@@ -113,11 +125,11 @@ module.exports = {
 				chunks.push(buf);
 			}
 
-			const lines = finalizeLines(Buffer.concat(chunks.reverse()).toString("binary"), maxLineCount);
+			const lines = finalizeLines(Buffer.concat(chunks.reverse()), maxLineCount);
 			if (encoding === "buffer") {
-				return Buffer.from(lines, "binary");
+				return lines;
 			}
-			return Buffer.from(lines, "binary").toString(encoding);
+			return lines.toString(encoding);
 		} finally {
 			if (file) {
 				await file.close().catch(() => {
