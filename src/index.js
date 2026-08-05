@@ -59,15 +59,7 @@ module.exports = {
 
 		let file = null;
 		try {
-			try {
-				file = await fs.open(input_file_path, "r");
-			} catch (err) {
-				if (err && err.code === "ENOENT") {
-					throw new Error("file does not exist");
-				}
-				throw err;
-			}
-
+			file = await fs.open(input_file_path, "r");
 			const stat = await file.stat();
 
 			if (maxLineCount <= 0) {
@@ -130,6 +122,11 @@ module.exports = {
 				return lines;
 			}
 			return lines.toString(encoding);
+		} catch (err) {
+			if (err && err.code === "ENOENT") {
+				throw new Error("file does not exist");
+			}
+			throw err;
 		} finally {
 			if (file) {
 				await file.close().catch(() => {
