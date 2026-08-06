@@ -21,8 +21,4 @@ jobs:
         run: npm ci
 
       - name: Run linters
-        uses: wearerequired/lint-action@v1
-        with:
-          github_token: ${{ secrets.github_token }}
-          # Enable your linters here
-          eslint: true
+        run: npm run linting
